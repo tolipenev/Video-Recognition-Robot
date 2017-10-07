@@ -32,7 +32,9 @@ def processQR():
 
         qrs = detectImage( gray )
 
-        print getRobotPos( 'Radulescu', qrs )
+        robotGeo =  getRobotPos( 'Radulescu', qrs )
+        if robotGeo:
+            showRobot( frame, robotGeo)
         highlightQR( frame, qrs )
 
         # Displays the current frame
@@ -41,25 +43,41 @@ def processQR():
 def distance(p0, p1):
     return sqrt((p0[0] - p1[0])**2 + (p0[1] - p1[1])**2)
 
+def addPoints( p0, p1):
+    return p0[0]+p1[0], p0[1]+p1[1]
+
+def subtractPoints( p0, p1):
+    return p0[0]-p1[0], p0[1]-p1[1]
+
 def getRobotPos( name, qrs ):
     for qr in qrs:
-        if not qr[0] == name:
+        title, (p0, p1, p2, p3) = qr
+        if not title == name:
             continue
 
-        # angle
-        lineCentreTopDouble = qr[1][0]+qr[1][1]
-        lineCentreBottomDouble = qr[1][2]+qr[1][3]
+        print qr
 
-        dx, dy =    lineCentreTopDouble[0]-lineCentreBottomDouble[0], lineCentreTopDouble[1]-lineCentreBottomDouble[1]
+        # angle
+        lineCentreTopDouble = addPoints( p0, p1)
+        lineCentreBottomDouble = addPoints( p2,p3)
+        centreQuad = addPoints( lineCentreBottomDouble, lineCentreTopDouble)
+        print centreQuad, lineCentreTopDouble, lineCentreBottomDouble
+
+        dx, dy = subtractPoints( lineCentreTopDouble, lineCentreBottomDouble )
         theta = atan( dy/dx )
 
         # centre is just four point average
-        x, y =  (lineCentreTopDouble+lineCentreBottomDouble)[0]/2, (lineCentreTopDouble+lineCentreBottomDouble)[1]/2
+        x, y =  centreQuad[0]/4, centreQuad[1]/4
 
-        size = distance(qr[1][0], qr[1][3])
+        size = distance(p0, p2)
         return x, y, theta, size
 
     return None
+
+def showRobot( frame, robotGeo ):
+    x, y, theta, size = robotGeo
+    print robotGeo
+    cv2.circle( frame, (x, y), int(size/2), (255, 255, 128),  5 )
 
 def highlightQR( frame, qrs):
         if qrs:

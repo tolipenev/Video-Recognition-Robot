@@ -3,8 +3,9 @@ import zbar
 from PIL import Image
 import cv2
 import time
+from math import atan, sqrt
 
-def main():
+def processQR():
     """
     A simple function that captures webcam video utilizing OpenCV. The video is then broken down into frames which
     are constantly displayed. The frame is then converted to grayscale for better contrast. Afterwards, the image
@@ -29,26 +30,49 @@ def main():
         # Converts image to grayscale.
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-        qrs = scanImage( gray )
+        qrs = detectImage( gray )
+
+        print getRobotPos( 'Radulescu', qrs )
+        highlightQR( frame, qrs )
+
+        # Displays the current frame
+        cv2.imshow('Current', frame)
+
+def distance(p0, p1):
+    return sqrt((p0[0] - p1[0])**2 + (p0[1] - p1[1])**2)
+
+def getRobotPos( name, qrs ):
+    for qr in qrs:
+        if not qr[0] == name:
+            continue
+
+        # angle
+        lineCentreTopDouble = qr[1][0]+qr[1][1]
+        lineCentreBottomDouble = qr[1][2]+qr[1][3]
+
+        dx, dy =    lineCentreTopDouble[0]-lineCentreBottomDouble[0], lineCentreTopDouble[1]-lineCentreBottomDouble[1]
+        theta = atan( dy/dx )
+
+        # centre is just four point average
+        x, y =  (lineCentreTopDouble+lineCentreBottomDouble)[0]/2, (lineCentreTopDouble+lineCentreBottomDouble)[1]/2
+
+        size = distance(qr[1][0], qr[1][3])
+        return x, y, theta, size
+
+    return None
+
+def highlightQR( frame, qrs):
         if qrs:
             for qr in qrs:
-                print qr
                 cv2.line(frame, qr[1][0], qr[1][1],(255,255,0),5)
                 cv2.line(frame, qr[1][1], qr[1][2],(255,255,0),5)
                 cv2.line(frame, qr[1][2], qr[1][3],(255,255,0),5)
                 cv2.line(frame, qr[1][3], qr[1][0],(255,255,0),5)
 
                 font = cv2.FONT_HERSHEY_SIMPLEX
-                cv2.putText(frame,qr[0],(10,500), font, 4,(255,255,255),2)
-                #cv2.putText(frame,qr[0],(10,500), font, 4,(255,255,255),2,cv2.LINE_AA)
+                cv2.putText(frame,qr[0],(5,50), font, 2,(255,255,255),4)
 
-            #time.sleep(0.5)
-
-        # Displays the current frame
-        cv2.imshow('Current', frame)
-
-
-def scanImage( grayImage ):
+def detectImage( grayImage ):
         # Uses PIL to convert the grayscale image into a ndary array that ZBar can understand.
         image = Image.fromarray(grayImage)
         width, height = image.size
@@ -62,20 +86,8 @@ def scanImage( grayImage ):
         qr_images = []
         for decoded in zbar_image:
             qr_images.append( [decoded.data, decoded.location] )
-            #qr_images.append( [decoded.data, (decoded.location[0], decoded.location[1], decoded.location[2], decoded.location[3])]
-            # print decoded
-            # print "- ", decoded.data
-            # print "- ", decoded.type
-            # for point in decoded.location:
-            #     print "--", point
-            #     #print "--", 'x', point.x, 'y', point.y
 
         return qr_images
 
-
-        # if zbar_image:
-        #     return zbar_image[0]
-
-
 if __name__ == "__main__":
-    main()
+    processQR()

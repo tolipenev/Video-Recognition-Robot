@@ -5,7 +5,7 @@ import cv2
 import time
 from math import atan2, sqrt, cos, sin
 
-def processQR():
+def processQR( robotname ):
     """
     A simple function that captures webcam video utilizing OpenCV. The video is then broken down into frames which
     are constantly displayed. The frame is then converted to grayscale for better contrast. Afterwards, the image
@@ -31,11 +31,12 @@ def processQR():
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
         qrs = detectImage( gray )
+        highlightQR( frame, qrs )
 
-        robotGeo =  getRobotPos( 'Radulescu', qrs )
+        robotGeo =  getRobotPos( robotname , qrs )
         if robotGeo:
             showRobot( frame, robotGeo)
-        highlightQR( frame, qrs )
+            print "Robot position (x,y,theta,size)=", robotGeo
 
         # Displays the current frame
         cv2.imshow('Current', frame)
@@ -55,13 +56,10 @@ def getRobotPos( name, qrs ):
         if not title == name:
             continue
 
-        print qr
-
         # angle
         lineCentreTopDouble = addPoints( p0, p1)
         lineCentreBottomDouble = addPoints( p2,p3)
         centreQuad = addPoints( lineCentreBottomDouble, lineCentreTopDouble)
-        print centreQuad, lineCentreTopDouble, lineCentreBottomDouble
 
         dx, dy = subtractPoints( lineCentreTopDouble, lineCentreBottomDouble )
         theta = atan2( dy, dx )
@@ -76,7 +74,6 @@ def getRobotPos( name, qrs ):
 
 def showRobot( frame, robotGeo ):
     x, y, theta, size = robotGeo
-    print robotGeo
     cv2.circle( frame, (x, y), int(size/2), (255, 255, 128),  5 )
 
     dirLineEnd = (int(cos(theta)*size+x), int(sin(theta)*size+y))
@@ -85,13 +82,14 @@ def showRobot( frame, robotGeo ):
 def highlightQR( frame, qrs):
         if qrs:
             for qr in qrs:
-                cv2.line(frame, qr[1][0], qr[1][1],(255,255,0),5)
-                cv2.line(frame, qr[1][1], qr[1][2],(255,255,0),5)
-                cv2.line(frame, qr[1][2], qr[1][3],(255,255,0),5)
-                cv2.line(frame, qr[1][3], qr[1][0],(255,255,0),5)
+                title, (p0, p1, p2, p3) = qr
+                cv2.line(frame, p0, p1,(255,255,0),5)
+                cv2.line(frame, p1, p2,(255,255,0),5)
+                cv2.line(frame, p2, p3,(255,255,0),5)
+                cv2.line(frame, p3, p0,(255,255,0),5)
 
                 font = cv2.FONT_HERSHEY_SIMPLEX
-                cv2.putText(frame,qr[0],(5,50), font, 2,(255,255,255),4)
+                cv2.putText(frame,title,(5,50), font, 2,(255,255,255),4)
 
 def detectImage( grayImage ):
         # Uses PIL to convert the grayscale image into a ndary array that ZBar can understand.
@@ -103,7 +101,7 @@ def detectImage( grayImage ):
         scanner = zbar.ImageScanner()
         scanner.scan(zbar_image)
 
-        # # Prints data from image.
+        # Prints data from image.
         qr_images = []
         for decoded in zbar_image:
             qr_images.append( [decoded.data, decoded.location] )
@@ -111,4 +109,4 @@ def detectImage( grayImage ):
         return qr_images
 
 if __name__ == "__main__":
-    processQR()
+    processQR( 'Radulescu')

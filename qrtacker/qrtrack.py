@@ -3,7 +3,7 @@ import zbar
 from PIL import Image
 import cv2
 import time
-from math import atan, sqrt
+from math import atan2, sqrt, cos, sin
 
 def processQR():
     """
@@ -64,7 +64,7 @@ def getRobotPos( name, qrs ):
         print centreQuad, lineCentreTopDouble, lineCentreBottomDouble
 
         dx, dy = subtractPoints( lineCentreTopDouble, lineCentreBottomDouble )
-        theta = atan( dy/dx )
+        theta = atan2( dy, dx )
 
         # centre is just four point average
         x, y =  centreQuad[0]/4, centreQuad[1]/4
@@ -78,6 +78,9 @@ def showRobot( frame, robotGeo ):
     x, y, theta, size = robotGeo
     print robotGeo
     cv2.circle( frame, (x, y), int(size/2), (255, 255, 128),  5 )
+
+    dirLineEnd = (int(cos(theta)*size+x), int(sin(theta)*size+y))
+    cv2.line(frame, (x, y), dirLineEnd, (255,128,0),5)
 
 def highlightQR( frame, qrs):
         if qrs:

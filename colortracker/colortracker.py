@@ -104,6 +104,6 @@ def process( infile ):
     cv2.destroyAllWindows()
 
 if __name__ == "__main__":
-    #infile = "qr_2017-10-07 21:23:52.avi"
-    infile = "qr_2017-10-08 12:55:36.avi"
+    #infile = "../testvideo/qr_2017-10-07 21:23:52.avi"
+    infile = "../testvideo/qr_2017-10-08 12:55:36.avi"
     process( infile )

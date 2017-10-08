@@ -4,11 +4,7 @@ import numpy as np
 
 
 def findPostit( hsv_img, limit_low, limit_up, threshold = 1000 ):
-        # pink post-it
-        #lower_pink = np.array([ 158, 62, 100])
-        #upper_pink = np.array([ 178, 112, 255])
         mask = cv2.inRange(hsv_img, np.array(limit_low), np.array(limit_up))
-        #res = cv2.bitwise_and(img_orig,img_orig, mask= mask)
 
         contours,h = cv2.findContours(mask,1,2)
         contour_areas = [(c, cv2.contourArea(c)) for c in contours]

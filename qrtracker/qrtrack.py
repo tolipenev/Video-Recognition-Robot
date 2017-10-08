@@ -73,6 +73,9 @@ def getRobotPos( name, qrs ):
     return None
 
 def showRobot( frame, robotGeo ):
+    if not robotGeo:
+        return
+
     x, y, theta, size = robotGeo
     cv2.circle( frame, (x, y), int(size/2), (255, 255, 128),  5 )
 

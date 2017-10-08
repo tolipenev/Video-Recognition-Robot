@@ -49,6 +49,8 @@ def process( infile ):
     # Begin capturing video. You can modify what video source to use with VideoCapture's argument. It's currently set
     # to be your webcam.
     capture = cv2.VideoCapture( infile )
+    robotGeoNew = None
+    robotGeoCurrent = None
 
     print "Current resolution:"
     print "- width:", capture.get(3)
@@ -72,7 +74,7 @@ def process( infile ):
         blue_cnt = findPostit( hsv, hsv_limits['blue'] )
 
         print "count: pink", len(pink_cnt), "green", len(green_cnt)
-        robotGeo = getRobotPos( green_cnt, pink_cnt)
+        robotGeoNew = getRobotPos( green_cnt, pink_cnt)
 
         highlightPostits( frame, pink_cnt)
         highlightPostits( frame, green_cnt)
@@ -80,7 +82,17 @@ def process( infile ):
         highlightPostits( frame, orange_cnt)
         highlightPostits( frame, blue_cnt)
 
-        qrtrack.showRobot( frame, robotGeo)
+        if not robotGeoCurrent:
+            robotGeoCurrent = robotGeoNew
+        else:
+            new_xy = robotGeoNew[0], robotGeoNew[1]
+            current_xy = robotGeoCurrent[0], robotGeoCurrent[1]
+            if qrtrack.distance( new_xy, current_xy) < 150:
+                robotGeoCurrent = robotGeoNew
+            else:
+                print "Warning tracking issues..."
+
+        qrtrack.showRobot( frame, robotGeoCurrent)
 
         # Displays the current frame
         cv2.namedWindow('Current', cv2.WINDOW_NORMAL)

@@ -2,8 +2,13 @@ import cv2
 import datetime
 import numpy as np
 
+hsv_limits = {  'pink':   ([158, 62,100], [178,112,255]),
+                'green':  ([ 36, 50,100], [ 56,100,255]),
+                'yellow': ([ 17, 72,100], [ 37,112,255]),
+                'orange': ([  0,130,100], [ 25,170,255])}
 
-def findPostit( hsv_img, limit_low, limit_up, threshold = 1000 ):
+def findPostit( hsv_img, limits, threshold = 1000 ):
+        limit_low, limit_up = limits
         mask = cv2.inRange(hsv_img, np.array(limit_low), np.array(limit_up))
 
         contours,h = cv2.findContours(mask,1,2)
@@ -37,26 +42,15 @@ def process( infile ):
         # Convert BGR to HSV
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
-        pink_cnt   = findPostit( hsv, [158, 62,100], [178,112,255] )
-        green_cnt  = findPostit( hsv, [ 36, 50,100], [ 56,100,255] )
-        yellow_cnt = findPostit( hsv, [ 17, 72,100], [ 37,112,255] )
-        orange_cnt = findPostit( hsv, [  0,130,100], [ 25,170,255] )
+        pink_cnt   = findPostit( hsv, hsv_limits['pink'] )
+        green_cnt  = findPostit( hsv, hsv_limits['green'] )
+        yellow_cnt = findPostit( hsv, hsv_limits['yellow'] )
+        orange_cnt = findPostit( hsv, hsv_limits['orange'] )
 
         highlightPostits( frame, pink_cnt)
         highlightPostits( frame, green_cnt)
         highlightPostits( frame, yellow_cnt)
         highlightPostits( frame, orange_cnt)
-
-        # Converts image to grayscale.
-        # gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        #
-        # qrs = qrtrack.detectImage( gray )
-        # qrtrack.highlightQR( frame, qrs )
-        #
-        # robotGeo =  qrtrack.getRobotPos( robotname , qrs )
-        # if robotGeo:
-        #     qrtrack.showRobot( frame, robotGeo)
-        #     print "Robot position (x,y,theta,size)=", robotGeo
 
         # Displays the current frame
         cv2.namedWindow('Current', cv2.WINDOW_NORMAL)

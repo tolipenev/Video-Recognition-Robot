@@ -1,6 +1,11 @@
 import cv2
 import datetime
 import numpy as np
+import sys
+from math import atan2
+
+sys.path.append( '..')
+from qrtracker import qrtrack
 
 hsv_limits = {  'pink':   ([158, 62,100], [178,112,255]),
                 'green':  ([ 36, 50,100], [ 56,100,255]),
@@ -21,6 +26,44 @@ def findPostit( hsv_img, limits, threshold = 1000 ):
 def highlightPostits( frame, contours, line_width = 3, line_color = (255, 255,0) ):
         if len(contours) > 0:
             cv2.drawContours(frame,contours, -1, line_color, line_width)
+
+def getRobotPos( cnt_front, cnt_back ):
+    if len(cnt_front) < 1 or len(cnt_back) < 1:
+        return None
+
+    Mf = cv2.moments( cnt_front[0])
+    Mb = cv2.moments( cnt_back[0])
+
+    Cf = (int(Mf['m10']/Mf['m00']), int(Mf['m01']/Mf['m00']))
+    Cb = (int(Mb['m10']/Mb['m00']), int(Mb['m01']/Mb['m00']))
+
+    x, y = ((Cf[0]+Cb[0])/2, (Cf[1]+Cb[1])/2)
+    dx, dy = ((Cf[0]-Cb[0])/2, (Cf[1]-Cb[1])/2)
+    theta = atan2( dy, dx )
+    size = qrtrack.distance( Cf, Cb)*2
+
+    return x, y, theta, size
+
+    # for qr in qrs:
+    #     title, (p0, p1, p2, p3) = qr
+    #     if not title == name:
+    #         continue
+    #
+    #     # angle
+    #     lineCentreTopDouble = addPoints( p0, p1)
+    #     lineCentreBottomDouble = addPoints( p2,p3)
+    #     centreQuad = addPoints( lineCentreBottomDouble, lineCentreTopDouble)
+    #
+    #     dx, dy = subtractPoints( lineCentreTopDouble, lineCentreBottomDouble )
+    #     theta = atan2( dy, dx )
+    #
+    #     # centre is just four point average
+    #     x, y =  centreQuad[0]/4, centreQuad[1]/4
+    #
+    #     size = distance(p0, p2)
+    #     return x, y, theta, size
+    #
+    # return None
 
 def process( infile ):
 
@@ -49,11 +92,16 @@ def process( infile ):
         orange_cnt = findPostit( hsv, hsv_limits['orange'] )
         blue_cnt = findPostit( hsv, hsv_limits['blue'] )
 
+        print "count: pink", len(pink_cnt), "green", len(green_cnt)
+        robotGeo = getRobotPos( green_cnt, pink_cnt)
+
         highlightPostits( frame, pink_cnt)
         highlightPostits( frame, green_cnt)
         highlightPostits( frame, yellow_cnt)
         highlightPostits( frame, orange_cnt)
         highlightPostits( frame, blue_cnt)
+
+        qrtrack.showRobot( frame, robotGeo)
 
         # Displays the current frame
         cv2.namedWindow('Current', cv2.WINDOW_NORMAL)
@@ -66,5 +114,5 @@ def process( infile ):
 
 if __name__ == "__main__":
     #infile = "qr_2017-10-07 21:23:52.avi"
-    infile = "../qr_2017-10-08 12:45:07.avi"
+    infile = "../qr_2017-10-08 12:55:36.avi"
     process( infile )

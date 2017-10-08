@@ -1,30 +1,28 @@
 from qrtracker import qrtrack
 import cv2
+import datetime
+from colortracker import colortracker
 
-
-def processQR( robotname ):
-    """
-    A simple function that captures webcam video utilizing OpenCV. The video is then broken down into frames which
-    are constantly displayed. The frame is then converted to grayscale for better contrast. Afterwards, the image
-    is transformed into a numpy array using PIL. This is needed to create zbar image. This zbar image is then scanned
-    utilizing zbar's image scanner and will then print the decodeed message of any QR or bar code. To quit the program,
-    press "q".
-    :return:
-    """
-
+def process( robotname, outputfile ):
     # Begin capturing video. You can modify what video source to use with VideoCapture's argument. It's currently set
     # to be your webcam.
     capture = cv2.VideoCapture(1)
-    capture.set(3, 1920)
-    capture.set(4, 1080)
-    #capture.set(3, 1280)
-    #capture.set(4, 720)
+    resolution = (1920,1080)
+    #resolution = (1280, 720)
+    capture.set(3, resolution[0])
+    capture.set(4, resolution[1])
+
+    # Define the codec and create VideoWriter object
+    fourcc = cv2.cv.CV_FOURCC(*'XVID')
+    out = cv2.VideoWriter( outputfile ,fourcc, 20.0, resolution)
+
+    print "saving to file", outputfile
 
     print "Current resolution:"
     print "- width:", capture.get(3)
     print "- height:", capture.get(4)
 
-    while True:
+    while capture.isOpened():
         # To quit this program press q.
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
@@ -32,22 +30,40 @@ def processQR( robotname ):
         # Breaks down the video into frames
         ret, frame = capture.read()
 
+        # write the flipped frame
+        out.write(frame)
+
         # Converts image to grayscale.
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+#        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-        qrs = qrtrack.detectImage( gray )
-        qrtrack.highlightQR( frame, qrs )
+        hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+        pink_cnt   = colortracker.findPostit( hsv, colortracker.hsv_limits['pink'] )
+        green_cnt  = colortracker.findPostit( hsv, colortracker.hsv_limits['green'] )
+        yellow_cnt = colortracker.findPostit( hsv, colortracker.hsv_limits['yellow'] )
+        orange_cnt = colortracker.findPostit( hsv, colortracker.hsv_limits['orange'] )
+        blue_cnt   = colortracker.findPostit( hsv, colortracker.hsv_limits['blue'] )
 
-        robotGeo =  qrtrack.getRobotPos( robotname , qrs )
-        if robotGeo:
-            qrtrack.showRobot( frame, robotGeo)
-            print "Robot position (x,y,theta,size)=", robotGeo
+        colortracker.highlightPostits( frame, pink_cnt)
+        colortracker.highlightPostits( frame, green_cnt)
+        colortracker.highlightPostits( frame, yellow_cnt)
+        colortracker.highlightPostits( frame, orange_cnt)
+        colortracker.highlightPostits( frame, blue_cnt)
+
+        # robotGeo =  qrtrack.getRobotPos( robotname , qrs )
+        # if robotGeo:
+        #     qrtrack.showRobot( frame, robotGeo)
+        #     print "Robot position (x,y,theta,size)=", robotGeo
 
         # Displays the current frame
         cv2.namedWindow('Current', cv2.WINDOW_NORMAL)
         cv2.imshow('Current', frame)
         cv2.resizeWindow('Current', 640, 360 )
 
+    # Release everything if job is finished
+    capture.release()
+    out.release()
+    cv2.destroyAllWindows()
 
 if __name__ == "__main__":
-    processQR( 'Casper Hansen')
+    outfile = "qr_"+datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')+".avi"
+    process( 'Casper Hansen', outfile )

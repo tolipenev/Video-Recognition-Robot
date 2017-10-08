@@ -5,7 +5,8 @@ import numpy as np
 hsv_limits = {  'pink':   ([158, 62,100], [178,112,255]),
                 'green':  ([ 36, 50,100], [ 56,100,255]),
                 'yellow': ([ 17, 72,100], [ 37,112,255]),
-                'orange': ([  0,130,100], [ 25,170,255])}
+                'orange': ([  0,130,100], [ 25,170,255]),
+                'blue':   ([ 87,150,100], [107,255,255]) }
 
 def findPostit( hsv_img, limits, threshold = 1000 ):
         limit_low, limit_up = limits
@@ -46,11 +47,13 @@ def process( infile ):
         green_cnt  = findPostit( hsv, hsv_limits['green'] )
         yellow_cnt = findPostit( hsv, hsv_limits['yellow'] )
         orange_cnt = findPostit( hsv, hsv_limits['orange'] )
+        blue_cnt = findPostit( hsv, hsv_limits['blue'] )
 
         highlightPostits( frame, pink_cnt)
         highlightPostits( frame, green_cnt)
         highlightPostits( frame, yellow_cnt)
         highlightPostits( frame, orange_cnt)
+        highlightPostits( frame, blue_cnt)
 
         # Displays the current frame
         cv2.namedWindow('Current', cv2.WINDOW_NORMAL)
@@ -62,5 +65,6 @@ def process( infile ):
     cv2.destroyAllWindows()
 
 if __name__ == "__main__":
-    infile = "qr_2017-10-07 21:23:52.avi"
+    #infile = "qr_2017-10-07 21:23:52.avi"
+    infile = "../qr_2017-10-08 12:45:07.avi"
     process( infile )

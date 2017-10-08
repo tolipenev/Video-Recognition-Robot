@@ -44,27 +44,6 @@ def getRobotPos( cnt_front, cnt_back ):
 
     return x, y, theta, size
 
-    # for qr in qrs:
-    #     title, (p0, p1, p2, p3) = qr
-    #     if not title == name:
-    #         continue
-    #
-    #     # angle
-    #     lineCentreTopDouble = addPoints( p0, p1)
-    #     lineCentreBottomDouble = addPoints( p2,p3)
-    #     centreQuad = addPoints( lineCentreBottomDouble, lineCentreTopDouble)
-    #
-    #     dx, dy = subtractPoints( lineCentreTopDouble, lineCentreBottomDouble )
-    #     theta = atan2( dy, dx )
-    #
-    #     # centre is just four point average
-    #     x, y =  centreQuad[0]/4, centreQuad[1]/4
-    #
-    #     size = distance(p0, p2)
-    #     return x, y, theta, size
-    #
-    # return None
-
 def process( infile ):
 
     # Begin capturing video. You can modify what video source to use with VideoCapture's argument. It's currently set
@@ -114,5 +93,5 @@ def process( infile ):
 
 if __name__ == "__main__":
     #infile = "qr_2017-10-07 21:23:52.avi"
-    infile = "../qr_2017-10-08 12:55:36.avi"
+    infile = "qr_2017-10-08 12:55:36.avi"
     process( infile )
